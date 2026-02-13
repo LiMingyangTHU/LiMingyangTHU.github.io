@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>三生宇宙 · 为你浪漫</title>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- 浪漫英文字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* 全局重置与变量 */
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Microsoft YaHei', 'PingFang SC', 'Helvetica Neue', sans-serif;
+            color: white;
+        }
+        /* 动态星空背景由Three.js绘制，此处添加一层柔光覆盖 */
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 192, 203, 0.15) 0%, rgba(0, 0, 0, 0.4) 80%);
+            pointer-events: none;
+            z-index: 5;
+        }
+        /* 主内容层 - 浪漫柔光玻璃效果 */
+        #main-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+            width: 92%;
+            max-width: 1300px;
+            background: linear-gradient(145deg, rgba(40, 10, 30, 0.7), rgba(20, 5, 25, 0.8));
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 48px;
+            padding: 25px 20px 35px;
+            border: 1px solid rgba(255, 215, 215, 0.3);
+            box-shadow: 0 25px 60px rgba(255, 105, 180, 0.3), 0 0 0 1px rgba(255, 182, 193, 0.2) inset;
+            animation: glowPulse 4s infinite alternate;
+        }
+        @keyframes glowPulse {
+            0% { box-shadow: 0 25px 60px rgba(255, 105, 180, 0.2), 0 0 0 1px rgba(255, 182, 193, 0.2) inset; }
+            100% { box-shadow: 0 30px 70px rgba(255, 150, 200, 0.5), 0 0 0 2px rgba(255, 220, 240, 0.4) inset; }
+        }
+        /* 跳动的心 */
+        .heart-icon {
+            font-size: 3.8rem;
+            line-height: 1;
+            animation: heartbeat 1.4s ease-in-out infinite;
+            filter: drop-shadow(0 0 15px #ff99cc);
+            margin-bottom: 5px;
+        }
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            14% { transform: scale(1.2); }
+            28% { transform: scale(1); }
+            42% { transform: scale(1.1); }
+            70% { transform: scale(1); }
+        }
+        h1 {
+            font-size: 2.6rem;
+            margin: 5px 0 5px;
+            font-weight: 400;
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, #ffe6f0, #ffd9b3, #ffe0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px #ffb6c1;
+            font-family: 'Dancing Script', 'Microsoft YaHei', cursive;
+        }
+        .love-message {
+            font-size: 1.6rem;
+            margin: 15px 0 25px;
+            color: #fff0f5;
+            line-height: 1.5;
+            font-weight: 400;
+            text-shadow: 0 0 20px #ffa07a, 0 0 40px #ff69b4;
+            background: rgba(255, 240, 245, 0.1);
+            display: inline-block;
+            padding: 12px 28px;
+            border-radius: 60px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 182, 193, 0.3);
+            box-shadow: 0 8px 20px rgba(255, 20, 147, 0.2);
+        }
+        /* 漂浮的爱心装饰（纯CSS） */
+        .floating-hearts {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 8;
+            overflow: hidden;
+        }
+        .floating-hearts span {
+            position: absolute;
+            color: rgba(255, 120, 160, 0.3);
+            font-size: 24px;
+            animation: float 8s linear infinite;
+            user-select: none;
+        }
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; }
+        }
+        /* 三图片容器 - 移动端优化 */
+        .gallery {
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 25px 0 20px;
+        }
+        .image-card {
+            width: 280px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border-radius: 28px;
+            overflow: hidden;
+            background: rgba(20, 5, 15, 0.5);
+            border: 1px solid rgba(255, 200, 220, 0.3);
+            box-shadow: 0 15px 35px rgba(255, 105, 180, 0.25);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            transform: translateY(0);
+        }
+        .image-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            border-color: #ffb6c1;
+            box-shadow: 0 30px 50px rgba(255, 130, 200, 0.5);
+        }
+        .image-card:active {
+            transform: scale(0.98);
+        }
+        .image-card img {
+            width: 100%;
+            height: 210px;
+            object-fit: cover;
+            display: block;
+            border-bottom: 2px solid rgba(255, 222, 230, 0.5);
+            transition: transform 0.5s;
+        }
+        .image-card:hover img {
+            transform: scale(1.05);
+        }
+        .image-date {
+            padding: 15px 0;
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(to top, #330019, #550033);
+            color: #fff2f7;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px #ff99cc, 0 0 20px #ff3399;
+            border-top: 1px solid #ffb6c1;
+        }
+        /* 署名 */
+        .signature {
+            font-size: 1.1rem;
+            margin-top: 25px;
+            opacity: 0.9;
+            border-top: 1px dashed rgba(255, 182, 193, 0.5);
+            padding-top: 20px;
+            color: #ffe4ec;
+            font-family: 'Dancing Script', cursive;
+            text-shadow: 0 0 8px #ff99aa;
+        }
+        /* 模态框 - 浪漫大图展示 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 200;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(30, 5, 20, 0.95);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .modal-content {
+            max-width: 90%;
+            max-height: 75%;
+            border-radius: 32px;
+            border: 4px solid rgba(255, 240, 245, 0.8);
+            box-shadow: 0 0 70px #ff66b2, 0 0 120px #ff3388;
+            animation: zoomIn 0.3s;
+        }
+        @keyframes zoomIn {
+            from { transform: scale(0.7); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .modal-date {
+            color: #fff0f5;
+            font-size: 2.2rem;
+            margin-top: 20px;
+            font-weight: bold;
+            text-shadow: 0 0 30px #ffb6c1, 0 0 60px #ff69b4;
+            background: rgba(0,0,0,0.3);
+            padding: 8px 25px;
+            border-radius: 50px;
+            backdrop-filter: blur(5px);
+            border: 1px solid #ffc0cb;
+        }
+        .close-btn {
+            position: absolute;
+            top: 25px;
+            right: 35px;
+            color: #ffe4ec;
+            font-size: 5rem;
+            cursor: pointer;
+            transition: 0.3s;
+            line-height: 1;
+            text-shadow: 0 0 30px #ff99cc;
+            z-index: 210;
+        }
+        .close-btn:hover {
+            color: #ffb6c1;
+            transform: scale(1.2) rotate(90deg);
+        }
+        /* 加载层 - 心形旋转 */
+        #loading {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #1a0b13;
+            z-index: 300;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            flex-direction: column;
+            transition: opacity 1s;
+            background: radial-gradient(circle at center, #330019, #0a0005);
+        }
+        .heart-spinner {
+            width: 100px;
+            height: 100px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="%23ff99cc" d="M50 88.9L15.6 54.5C6.8 45.7 6.8 31.5 15.6 22.7 20 18.3 25.8 16 32 16c6.2 0 12 2.3 16.6 6.8L50 24l1.4-1.2C56 18.3 61.8 16 68 16c6.2 0 12 2.3 16.6 6.8 8.8 8.8 8.8 23 0 31.8L50 88.9z"/></svg>') no-repeat center/contain;
+            animation: spinHeart 1.2s infinite linear;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 20px #ff66aa);
+        }
+        @keyframes spinHeart {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        footer {
+            position: absolute;
+            bottom: 15px;
+            right: 20px;
+            z-index: 10;
+            color: rgba(255, 200, 220, 0.5);
+            font-size: 0.85rem;
+            backdrop-filter: blur(2px);
+            padding: 5px 12px;
+            border-radius: 30px;
+            background: rgba(0,0,0,0.2);
+        }
+        /* ========== 移动端精细化调整 ========== */
+        @media (max-width: 1000px) {
+            .image-card { width: 240px; }
+            h1 { font-size: 2.3rem; }
+            .love-message { font-size: 1.4rem; padding: 10px 18px; }
+        }
+        @media (max-width: 760px) {
+            #main-content {
+                width: 95%;
+                padding: 20px 12px 30px;
+                border-radius: 36px;
+            }
+            .gallery {
+                gap: 15px;
+            }
+            .image-card {
+                width: 100%;
+                max-width: 380px;
+            }
+            .image-card img {
+                height: 220px;
+            }
+            h1 { font-size: 2rem; }
+            .love-message {
+                font-size: 1.2rem;
+                margin: 15px 0 20px;
+                padding: 10px 16px;
+            }
+            .modal-date { font-size: 1.8rem; }
+            .close-btn {
+                font-size: 4rem;
+                top: 15px;
+                right: 20px;
+            }
+            .heart-icon { font-size: 3.2rem; }
+        }
+        @media (max-width: 480px) {
+            h1 { font-size: 1.8rem; }
+            .love-message { font-size: 1.1rem; }
+            .image-card img { height: 200px; }
+            .image-date { font-size: 1.3rem; padding: 12px 0; }
+            .signature { font-size: 1rem; }
+            .modal-date { font-size: 1.5rem; }
+        }
+        /* 防止内容被刘海遮挡 */
+        @supports (padding: max(0px)) {
+            #main-content {
+                padding-left: max(20px, env(safe-area-inset-left));
+                padding-right: max(20px, env(safe-area-inset-right));
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 漂浮爱心装饰 -->
+    <div class="floating-hearts" id="hearts"></div>
+    <!-- 叠加柔光层 -->
+    <div id="overlay"></div>
+
+    <!-- 加载层 -->
+    <div id="loading">
+        <div class="heart-spinner"></div>
+        <div style="font-size:1.4rem; text-shadow:0 0 20px #ff99cc;">正在抓取三份宇宙浪漫...</div>
+    </div>
+
+    <!-- 主内容 -->
+    <div id="main-content">
+        <div class="heart-icon">❤️</div>
+        <h1>给最爱的玲玲</h1>
+        <div class="love-message">
+            💫 你是我的轨道，我是你的卫星<br>
+            一朝入轨，三生不离 💫<br>
+            无论时间如何流逝，我始终围绕你旋转
+        </div>
+
+        <!-- 三张图片容器 -->
+        <div class="gallery" id="gallery"></div>
+
+        <div class="signature">—— 来自力工鼠鼠的硬核浪漫 · 情人节快乐</div>
+    </div>
+
+    <!-- 放大查看模态框 -->
+    <div id="imageModal" class="modal">
+        <span class="close-btn" id="closeModal">&times;</span>
+        <img class="modal-content" id="modalImg">
+        <div class="modal-date" id="modalDate"></div>
+    </div>
+
+    <footer> 图片是NASA官方的当日星空</footer>
+
+    <script>
+        // NASA API 密钥
+        const NASA_API_KEY = 'hSPwW8xXGEdkEaFD9LkeaDGtrUedrA4zSskUGuyW';
+        // 三个日期
+        const dates = [
+            '1998-11-22',
+            '2025-10-09',
+            new Date().toISOString().slice(0, 10) // 当天
+        ];
+
+        // 格式化中文日期
+        function formatChineseDate(dateStr) {
+            const [year, month, day] = dateStr.split('-');
+            return `${year}年${parseInt(month)}月${parseInt(day)}日`;
+        }
+
+        // --- 初始化Three.js星空 (增加浪漫色彩：部分星星带颜色) ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x120810); // 深紫红底色
+        
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 5;
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        function createStars(count, radiusMin, radiusMax, size, pastel = false) {
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(count * 3);
+            const colors = new Float32Array(count * 3);
+            for (let i = 0; i < count * 3; i += 3) {
+                const r = radiusMin + Math.random() * (radiusMax - radiusMin);
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                positions[i] = Math.sin(phi) * Math.cos(theta) * r;
+                positions[i+1] = Math.sin(phi) * Math.sin(theta) * r;
+                positions[i+2] = Math.cos(phi) * r;
+
+                if (pastel) {
+                    // 柔和彩色星星
+                    colors[i] = 0.8 + 0.4 * Math.random();   // R
+                    colors[i+1] = 0.6 + 0.5 * Math.random(); // G
+                    colors[i+2] = 1.0;                       // B偏多
+                } else {
+                    colors[i] = 1.0;
+                    colors[i+1] = 1.0;
+                    colors[i+2] = 1.0;
+                }
+            }
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            const material = new THREE.PointsMaterial({ 
+                size: size, 
+                vertexColors: pastel, 
+                transparent: true, 
+                opacity: 0.9, 
+                sizeAttenuation: true,
+                blending: THREE.AdditiveBlending // 增加光晕感
+            });
+            return new THREE.Points(geometry, material);
+        }
+
+        const stars1 = createStars(2000, 30, 200, 0.7, true);  // 彩色近星
+        const stars2 = createStars(1500, 200, 500, 0.4, false); // 白色远星
+        scene.add(stars1);
+        scene.add(stars2);
+
+        // 添加少量闪烁的大星星（通过额外粒子）
+        const sparkleStars = createStars(300, 10, 80, 1.2, true);
+        scene.add(sparkleStars);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            stars1.rotation.y += 0.00015;
+            stars2.rotation.y -= 0.00025;
+            sparkleStars.rotation.y += 0.0003;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // --- 生成漂浮爱心 (纯CSS) ---
+        function createFloatingHearts() {
+            const container = document.getElementById('hearts');
+            for (let i = 0; i < 15; i++) {
+                const heart = document.createElement('span');
+                heart.innerHTML = '❤️';
+                heart.style.left = Math.random() * 100 + '%';
+                heart.style.animationDuration = 6 + Math.random() * 10 + 's';
+                heart.style.fontSize = 15 + Math.floor(Math.random() * 30) + 'px';
+                heart.style.opacity = 0.1 + Math.random() * 0.3;
+                heart.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(heart);
+            }
+        }
+        createFloatingHearts();
+
+        // --- 获取NASA图片并渲染 ---
+        const gallery = document.getElementById('gallery');
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImg');
+        const modalDate = document.getElementById('modalDate');
+        const closeBtn = document.getElementById('closeModal');
+
+        closeBtn.onclick = () => { modal.style.display = 'none'; };
+        window.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+
+        let loadedCount = 0;
+        const totalImages = dates.length;
+
+        dates.forEach((date, index) => {
+            const apiUrl = `https://api.nasa.gov/planetary/apod?api_key=${NASA_API_KEY}&date=${date}`;
+            
+            fetch(apiUrl)
+                .then(res => {
+                    if (!res.ok) throw new Error('APOD请求失败');
+                    return res.json();
+                })
+                .then(data => {
+                    const card = document.createElement('div');
+                    card.className = 'image-card';
+
+                    const img = document.createElement('img');
+                    let imgUrl = data.url;
+                    if (data.media_type === 'video') {
+                        imgUrl = 'https://apod.nasa.gov/apod/image/1903/IG_JupiterSchmidt_960.jpg'; // 木星备选
+                    }
+                    img.src = imgUrl;
+                    img.alt = date;
+                    img.loading = 'lazy';
+
+                    img.onload = () => {
+                        loadedCount++;
+                        if (loadedCount === totalImages) {
+                            document.getElementById('loading').style.opacity = '0';
+                            setTimeout(() => document.getElementById('loading').style.display = 'none', 1000);
+                        }
+                    };
+                    img.onerror = () => {
+                        img.src = 'https://apod.nasa.gov/apod/image/2002/IG_Final_3_John Gleason.jpg';
+                        loadedCount++;
+                        if (loadedCount === totalImages) {
+                            document.getElementById('loading').style.opacity = '0';
+                            setTimeout(() => document.getElementById('loading').style.display = 'none', 1000);
+                        }
+                    };
+
+                    const dateDiv = document.createElement('div');
+                    dateDiv.className = 'image-date';
+                    dateDiv.textContent = formatChineseDate(date);
+
+                    card.appendChild(img);
+                    card.appendChild(dateDiv);
+
+                    card.addEventListener('click', () => {
+                        modalImg.src = img.src;
+                        modalDate.textContent = formatChineseDate(date);
+                        modal.style.display = 'flex';
+                    });
+
+                    gallery.appendChild(card);
+                })
+                .catch(err => {
+                    console.error(`获取${date}失败:`, err);
+                    const card = document.createElement('div');
+                    card.className = 'image-card';
+                    const img = document.createElement('img');
+                    img.src = 'https://apod.nasa.gov/apod/image/2002/IG_Final_3_John Gleason.jpg';
+                    img.alt = date;
+                    img.onload = () => {
+                        loadedCount++;
+                        if (loadedCount === totalImages) {
+                            document.getElementById('loading').style.opacity = '0';
+                            setTimeout(() => document.getElementById('loading').style.display = 'none', 1000);
+                        }
+                    };
+                    const dateDiv = document.createElement('div');
+                    dateDiv.className = 'image-date';
+                    dateDiv.textContent = formatChineseDate(date);
+                    card.appendChild(img);
+                    card.appendChild(dateDiv);
+                    card.addEventListener('click', () => {
+                        modalImg.src = img.src;
+                        modalDate.textContent = formatChineseDate(date);
+                        modal.style.display = 'flex';
+                    });
+                    gallery.appendChild(card);
+                });
+        });
+
+        // 后备超时隐藏加载层
+        setTimeout(() => {
+            if (loadedCount < totalImages) {
+                document.getElementById('loading').style.opacity = '0';
+                setTimeout(() => document.getElementById('loading').style.display = 'none', 1000);
+            }
+        }, 10000);
+    </script>
+</body>
+</html>
